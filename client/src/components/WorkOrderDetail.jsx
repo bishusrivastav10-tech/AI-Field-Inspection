@@ -18,9 +18,9 @@ import {
 import { fetchWorkOrderById, updateWorkOrderStatus } from '../utils/api';
 import DecisionTimeline from './DecisionTimeline';
 
-export default function WorkOrderDetail({ workOrderId, onBack, onVerifyRepair }) {
-  const [workOrder, setWorkOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function WorkOrderDetail({ workOrderId, initialWorkOrder, onBack, onVerifyRepair }) {
+  const [workOrder, setWorkOrder] = useState(initialWorkOrder || null);
+  const [loading, setLoading] = useState(!initialWorkOrder && !workOrder);
   const [checklist, setChecklist] = useState([
     { id: 1, text: "Review safety warnings and wear designated PPE", completed: true },
     { id: 2, text: "Isolate asset / turn off adjacent power breaker", completed: false },
@@ -29,15 +29,22 @@ export default function WorkOrderDetail({ workOrderId, onBack, onVerifyRepair })
     { id: 5, text: "Capture after-repair photograph for AI verification", completed: false }
   ]);
 
+  useEffect(() => {
+    if (initialWorkOrder) {
+      setWorkOrder(initialWorkOrder);
+      setLoading(false);
+    }
+  }, [initialWorkOrder]);
+
   const loadWorkOrder = async () => {
-    setLoading(true);
+    if (!workOrder) setLoading(true);
     try {
       const res = await fetchWorkOrderById(workOrderId);
       if (res.workOrder) {
         setWorkOrder(res.workOrder);
       }
     } catch (err) {
-      console.error("Error fetching work order:", err);
+      console.warn("API fetch fallback active for work order:", err.message);
     } finally {
       setLoading(false);
     }

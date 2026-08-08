@@ -301,7 +301,7 @@ export default function Dashboard({ onSelectWorkOrder, onNewInspection, onVerify
                 {/* Card Actions Footer */}
                 <div className="px-4 pb-4 pt-1 flex items-center gap-2">
                   <button
-                    onClick={() => onSelectWorkOrder(wo.id)}
+                    onClick={() => onSelectWorkOrder(wo)}
                     className="flex-1 flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
                   >
                     <span>Details & Plan</span>

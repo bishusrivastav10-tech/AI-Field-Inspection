@@ -9,11 +9,17 @@ import AIAnalysisModal from './components/AIAnalysisModal';
 export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [selectedWoId, setSelectedWoId] = useState(null);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
 
-  const handleSelectWorkOrder = (id) => {
-    setSelectedWoId(id);
+  const handleSelectWorkOrder = (idOrWo) => {
+    if (typeof idOrWo === 'object' && idOrWo !== null) {
+      setSelectedWorkOrder(idOrWo);
+      setSelectedWoId(idOrWo.id);
+    } else {
+      setSelectedWoId(idOrWo);
+    }
     setCurrentTab('work-order-detail');
   };
 
@@ -29,12 +35,17 @@ export default function App() {
 
   const handleInspectionCreated = (result) => {
     setAnalysisResult(result);
-    // Keep modal open so user sees completion summary card
+    if (result && result.workOrder) {
+      setSelectedWorkOrder(result.workOrder);
+      setSelectedWoId(result.workOrder.id);
+    }
   };
 
   const handleViewWorkOrderFromModal = (id) => {
     setModalOpen(false);
-    setSelectedWoId(id);
+    if (id && (!selectedWoId || selectedWoId !== id)) {
+      setSelectedWoId(id);
+    }
     setCurrentTab('work-order-detail');
   };
 
@@ -51,10 +62,12 @@ export default function App() {
         currentTab={currentTab} 
         setCurrentTab={(tab) => {
           setSelectedWoId(null);
+          setSelectedWorkOrder(null);
           setCurrentTab(tab);
         }} 
         onNewInspection={() => {
           setSelectedWoId(null);
+          setSelectedWorkOrder(null);
           setCurrentTab('new-inspection');
         }}
       />
@@ -88,6 +101,7 @@ export default function App() {
         {currentTab === 'work-order-detail' && (
           <WorkOrderDetail 
             workOrderId={selectedWoId}
+            initialWorkOrder={selectedWorkOrder}
             onBack={() => setCurrentTab('dashboard')}
             onVerifyRepair={handleVerifyRepair}
           />

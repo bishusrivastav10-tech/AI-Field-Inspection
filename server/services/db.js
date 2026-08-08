@@ -115,6 +115,18 @@ const initialData = {
 
 export function getStore() {
   if (inMemoryStore) return inMemoryStore;
+  
+  const tmpPath = path.join(os.tmpdir(), 'afo_store.json');
+  try {
+    if (fs.existsSync(tmpPath)) {
+      const raw = fs.readFileSync(tmpPath, 'utf-8');
+      inMemoryStore = JSON.parse(raw);
+      return inMemoryStore;
+    }
+  } catch (e) {
+    // Ignore
+  }
+
   try {
     if (fs.existsSync(STORE_PATH)) {
       const raw = fs.readFileSync(STORE_PATH, 'utf-8');
