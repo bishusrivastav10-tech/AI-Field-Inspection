@@ -46,7 +46,7 @@ npm run server
 # Terminal 2: Start Frontend React Client (Port 3000)
 npm run client
 ```
-Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+Open **[Demo Link](https://ai-field-inspection.vercel.app/)** in your browser.
 
 ---
 
