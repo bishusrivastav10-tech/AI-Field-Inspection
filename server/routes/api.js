@@ -17,7 +17,8 @@ import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-let UPLOADS_DIR = path.join(__dirname, '../uploads');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || __dirname.includes('var/task') || __dirname.includes('/tmp'));
+let UPLOADS_DIR = isServerless ? os.tmpdir() : path.join(__dirname, '../uploads');
 
 try {
   if (!fs.existsSync(UPLOADS_DIR)) {
@@ -30,12 +31,7 @@ try {
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    try {
-      if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-      cb(null, UPLOADS_DIR);
-    } catch (e) {
-      cb(null, os.tmpdir());
-    }
+    cb(null, os.tmpdir());
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

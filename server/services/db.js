@@ -114,22 +114,33 @@ const initialData = {
 };
 
 export function getStore() {
-  if (!fs.existsSync(STORE_PATH)) {
-    saveStore(initialData);
-    return initialData;
-  }
+  if (inMemoryStore) return inMemoryStore;
   try {
-    const raw = fs.readFileSync(STORE_PATH, 'utf-8');
-    return JSON.parse(raw);
+    if (fs.existsSync(STORE_PATH)) {
+      const raw = fs.readFileSync(STORE_PATH, 'utf-8');
+      inMemoryStore = JSON.parse(raw);
+      return inMemoryStore;
+    }
   } catch (err) {
-    console.error("Error reading store.json, reinitializing:", err);
-    saveStore(initialData);
-    return initialData;
+    console.warn("Error reading store.json, using initial data:", err.message);
   }
+  inMemoryStore = JSON.parse(JSON.stringify(initialData));
+  return inMemoryStore;
 }
 
 export function saveStore(data) {
-  fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  inMemoryStore = data;
+  try {
+    fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    // Handle EROFS on Vercel read-only serverless filesystem
+    try {
+      const tmpPath = path.join(os.tmpdir(), 'afo_store.json');
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (tmpErr) {
+      console.warn("Serverless in-memory store active:", tmpErr.message);
+    }
+  }
 }
 
 export function getAllWorkOrders() {
