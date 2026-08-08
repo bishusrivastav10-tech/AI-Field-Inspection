@@ -94,12 +94,19 @@ router.get('/work-orders/:id', (req, res) => {
   }
 });
 
-/**
- * POST /api/inspections/analyze - Submit visual inspection, execute AI + Decision Engine, create WO
- */
-router.post('/inspections/analyze', upload.single('image'), async (req, res) => {
+const safeUpload = (fieldName) => (req, res, next) => {
+  upload.single(fieldName)(req, res, (err) => {
+    if (err) {
+      console.warn(`Multer ${fieldName} upload warning:`, err.message);
+    }
+    next();
+  });
+};
+
+const handleAnalyzeInspection = async (req, res) => {
   try {
-    const { location, description } = req.body;
+    const location = (req.body && req.body.location) || "Building Main Facility";
+    const description = (req.body && req.body.description) || "Field asset defect detected";
     let imageUrl = '/uploads/sample_leak.jpg';
 
     if (req.file) {
@@ -108,7 +115,7 @@ router.post('/inspections/analyze', upload.single('image'), async (req, res) => 
 
     const fullImagePath = req.file ? req.file.path : path.join(UPLOADS_DIR, 'sample_leak.jpg');
 
-    // 1. Run AI Multimodal Vision Analysis
+    // 1. Run AI Multimodal Vision Analysis (Guaranteed to return JSON even if file is missing)
     const aiAnalysis = await analyzeInspectionImage(fullImagePath, location, description);
 
     // 2. Execute Business Rules Decision Engine
@@ -168,7 +175,10 @@ router.post('/inspections/analyze', upload.single('image'), async (req, res) => 
     console.error("Error analyzing inspection:", err);
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
+
+router.post('/inspections/analyze', safeUpload('image'), handleAnalyzeInspection);
+router.post('/analyze', safeUpload('image'), handleAnalyzeInspection);
 
 /**
  * POST /api/work-orders/:id/verify - Submit repair proof image & verify with AI

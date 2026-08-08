@@ -32,6 +32,7 @@ app.use('/uploads', express.static(uploadsPath));
 
 // API router
 app.use('/api', apiRoutes);
+app.use('/', apiRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
