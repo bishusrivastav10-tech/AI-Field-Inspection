@@ -25,27 +25,28 @@ export async function submitInspection(formData) {
     });
     if (res.ok) return res.json();
 
-    // Fallback: If FormData upload fails, retry as JSON payload
+    // Fallback: If FormData upload fails, retry as JSON payload with Base64 imageDataUrl
     const location = formData.get('location') || 'Building Main Facility';
     const description = formData.get('description') || 'Visual defect inspection';
+    const imageDataUrl = formData.get('imageDataUrl') || null;
     const jsonRes = await fetch(`${API_BASE}/inspections/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ location, description }),
+      body: JSON.stringify({ location, description, imageDataUrl }),
     });
 
     if (jsonRes.ok) return jsonRes.json();
     const errData = await jsonRes.json().catch(() => ({}));
     throw new Error(errData.error || `HTTP ${jsonRes.status}`);
   } catch (err) {
-    // If fetch failed, try direct JSON fallback
     try {
       const location = formData.get('location') || 'Building Main Facility';
       const description = formData.get('description') || 'Visual defect inspection';
+      const imageDataUrl = formData.get('imageDataUrl') || null;
       const jsonRes = await fetch(`/api/inspections/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location, description }),
+        body: JSON.stringify({ location, description, imageDataUrl }),
       });
       if (jsonRes.ok) return jsonRes.json();
     } catch (e) {
@@ -64,10 +65,11 @@ export async function verifyRepair(id, formData) {
     if (res.ok) return res.json();
 
     // Fallback JSON payload
+    const afterImageDataUrl = formData.get('afterImageDataUrl') || null;
     const jsonRes = await fetch(`${API_BASE}/work-orders/${id}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ verified: true }),
+      body: JSON.stringify({ verified: true, afterImageDataUrl }),
     });
 
     if (jsonRes.ok) return jsonRes.json();

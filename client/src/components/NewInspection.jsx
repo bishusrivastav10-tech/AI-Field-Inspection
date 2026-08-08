@@ -56,7 +56,11 @@ export default function NewInspection({ onInspectionCreated, onStartAnalysisModa
     const file = e.target.files[0];
     if (file) {
       setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -74,6 +78,9 @@ export default function NewInspection({ onInspectionCreated, onStartAnalysisModa
       const formData = new FormData();
       if (selectedFile) {
         formData.append('image', selectedFile);
+      }
+      if (previewUrl) {
+        formData.append('imageDataUrl', previewUrl);
       }
       formData.append('location', location);
       formData.append('description', description);

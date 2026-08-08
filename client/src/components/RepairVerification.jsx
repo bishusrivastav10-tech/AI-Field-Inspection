@@ -60,7 +60,11 @@ export default function RepairVerification({ preselectedWoId, onVerificationComp
     const file = e.target.files[0];
     if (file) {
       setAfterFile(file);
-      setAfterPreview(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAfterPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -80,6 +84,9 @@ export default function RepairVerification({ preselectedWoId, onVerificationComp
       const formData = new FormData();
       if (afterFile) {
         formData.append('afterImage', afterFile);
+      }
+      if (afterPreview) {
+        formData.append('afterImageDataUrl', afterPreview);
       }
 
       const res = await verifyRepair(selectedWoId, formData);

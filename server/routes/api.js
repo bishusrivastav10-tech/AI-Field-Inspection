@@ -103,10 +103,16 @@ const handleAnalyzeInspection = async (req, res) => {
   try {
     const location = (req.body && req.body.location) || "Building Main Facility";
     const description = (req.body && req.body.description) || "Field asset defect detected";
-    let imageUrl = '/uploads/sample_leak.jpg';
+    let imageUrl = (req.body && req.body.imageDataUrl) || '/uploads/sample_leak.jpg';
 
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
+      try {
+        const fileBuf = fs.readFileSync(req.file.path);
+        const mime = req.file.mimetype || 'image/jpeg';
+        imageUrl = `data:${mime};base64,${fileBuf.toString('base64')}`;
+      } catch (e) {
+        imageUrl = `/uploads/${req.file.filename}`;
+      }
     }
 
     const fullImagePath = req.file ? req.file.path : path.join(UPLOADS_DIR, 'sample_leak.jpg');
@@ -179,19 +185,25 @@ router.post('/analyze', safeUpload('image'), handleAnalyzeInspection);
 /**
  * POST /api/work-orders/:id/verify - Submit repair proof image & verify with AI
  */
-router.post('/work-orders/:id/verify', upload.single('afterImage'), async (req, res) => {
+router.post('/work-orders/:id/verify', safeUpload('afterImage'), async (req, res) => {
   try {
     const woId = req.params.id;
     const wo = getWorkOrderById(woId);
     if (!wo) return res.status(404).json({ success: false, error: "Work Order not found" });
 
-    let afterImageUrl = wo.afterImage;
+    let afterImageUrl = (req.body && req.body.afterImageDataUrl) || wo.afterImage || '/uploads/sample_electrical_repaired.jpg';
     if (req.file) {
-      afterImageUrl = `/uploads/${req.file.filename}`;
+      try {
+        const fileBuf = fs.readFileSync(req.file.path);
+        const mime = req.file.mimetype || 'image/jpeg';
+        afterImageUrl = `data:${mime};base64,${fileBuf.toString('base64')}`;
+      } catch (e) {
+        afterImageUrl = `/uploads/${req.file.filename}`;
+      }
     }
 
-    const beforeImagePath = path.join(__dirname, '..', wo.beforeImage.replace('/uploads/', 'uploads/'));
-    const afterImagePath = req.file ? req.file.path : path.join(__dirname, '..', afterImageUrl.replace('/uploads/', 'uploads/'));
+    const beforeImagePath = path.join(__dirname, '..', (wo.beforeImage || '').replace('/uploads/', 'uploads/'));
+    const afterImagePath = req.file ? req.file.path : path.join(__dirname, '..', (afterImageUrl || '').replace('/uploads/', 'uploads/'));
 
     // 1. Run Repair Verification AI Model
     const verificationResult = await verifyRepairImage(beforeImagePath, afterImagePath, wo);
