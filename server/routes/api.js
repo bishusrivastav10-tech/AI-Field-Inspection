@@ -13,18 +13,29 @@ import {
 import { analyzeInspectionImage, verifyRepairImage } from '../services/aiService.js';
 import { executeDecisionEngine } from '../services/decisionEngine.js';
 
+import os from 'os';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const UPLOADS_DIR = path.join(__dirname, '../uploads');
+let UPLOADS_DIR = path.join(__dirname, '../uploads');
 
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch (e) {
+  UPLOADS_DIR = os.tmpdir();
 }
 
 // Multer storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, UPLOADS_DIR);
+    try {
+      if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+      cb(null, UPLOADS_DIR);
+    } catch (e) {
+      cb(null, os.tmpdir());
+    }
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

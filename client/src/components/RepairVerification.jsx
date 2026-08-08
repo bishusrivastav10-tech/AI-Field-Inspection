@@ -97,7 +97,7 @@ export default function RepairVerification({ preselectedWoId, onVerificationComp
 
     } catch (err) {
       alert("Error verifying repair: " + err.message);
-    } fontFinally: {
+    } finally {
       setVerifying(false);
     }
   };

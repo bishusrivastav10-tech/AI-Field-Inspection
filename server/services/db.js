@@ -2,13 +2,21 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import os from 'os';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = path.join(__dirname, '../data');
-const STORE_PATH = path.join(DATA_DIR, 'store.json');
+let DATA_DIR = path.join(__dirname, '../data');
+let STORE_PATH = path.join(DATA_DIR, 'store.json');
+let inMemoryStore = null;
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  DATA_DIR = os.tmpdir();
+  STORE_PATH = path.join(DATA_DIR, 'afo_store.json');
 }
 
 // Initial pre-seeded work orders and inspections
