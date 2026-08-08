@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+**/node_modules/
+client/node_modules/
+server/node_modules/
+.pnpm-store/
+
+# Environment files & Secret keys (DO NOT COMMIT!)
+.env
+**/.env
+.env.*
+.env.local
+
+# Build & Dist files
+dist/
+**/dist/
+build/
+.output/
+
+# Data store & Uploads with runtime data
+server/data/store.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
