@@ -18,6 +18,9 @@ if (apiKey) {
  * Convert local image file to Base64 format for Gemini API
  */
 function fileToGenerativePart(filePath, mimeType) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return null;
+  }
   const fileBuffer = fs.readFileSync(filePath);
   return {
     inlineData: {
@@ -34,10 +37,11 @@ export async function analyzeInspectionImage(filePath, location = '', descriptio
   // If Gemini API client is available and key is configured
   if (aiClient) {
     try {
-      const mimeType = filePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
+      const mimeType = (filePath || '').endsWith('.png') ? 'image/png' : 'image/jpeg';
       const imagePart = fileToGenerativePart(filePath, mimeType);
 
-      const prompt = `
+      if (imagePart) {
+        const prompt = `
 You are an expert industrial asset maintenance AI technician. Analyze the attached field photo of a facility asset or component.
 Location provided: "${location}"
 User notes: "${description}"
@@ -56,16 +60,17 @@ Return ONLY a valid JSON object matching this schema exactly:
 }
 `;
 
-      const response = await aiClient.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [prompt, imagePart],
-      });
+        const response = await aiClient.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: [prompt, imagePart],
+        });
 
-      const responseText = response.text;
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return parsed;
+        const responseText = response.text;
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return parsed;
+        }
       }
     } catch (err) {
       console.warn("Gemini AI API call failed or timed out, switching to Intelligent Vision Engine fallback:", err.message);
